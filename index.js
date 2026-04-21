@@ -17,7 +17,7 @@ app.get('/webhook', (req, res) => {
 app.post('/webhook', (req, res) => {
   const body = req.body;
   if (body.object === 'whatsapp_business_account') {
-    const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+    const message = body.entry[0].changes[0].value.messages[0];
     if (message) {
       handleMessage(message);
     }
@@ -39,8 +39,8 @@ async function sendMessage(to, text) {
 
 async function handleMessage(message) {
   const from = message.from;
-  const text = message.text?.body?.toLowerCase();
-  await sendMessage(from, '¡Hola! Soy el asistente de Cumbres del Norte 🏔️');
+  const text = message.text.body.toLowerCase();
+  await sendMessage(from, '¡Hola! Soy el asistente de Cumbres del Norte🏔️');
 }
 
 const PORT = process.env.PORT || 3000;

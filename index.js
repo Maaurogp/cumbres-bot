@@ -4,6 +4,10 @@ const axios = require('axios');
 const app = express();
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.send('Bot de Cumbres del Norte está corriendo 🏔️');
+});
+
 // Webhook verification
 app.get('/webhook', (req, res) => {
   const verifyToken = req.query['hub.verify_token'];
@@ -17,12 +21,22 @@ app.get('/webhook', (req, res) => {
 // Receive messages
 app.post('/webhook', (req, res) => {
   const body = req.body;
-  if (body.object === 'whatsapp_business_account') {
-    const message = body.entry[0].changes[0].value.messages[0];
-    if (message) {
-      handleMessage(message);
+  
+  try {
+    if (body.object === 'whatsapp_business_account') {
+      const entry = body.entry?.[0];
+      const changes = entry?.changes?.[0];
+      const value = changes?.value;
+      const message = value?.messages?.[0];
+      
+      if (message) {
+        handleMessage(message);
+      }
     }
+  } catch (error) {
+    console.error('Error procesando mensaje:', error);
   }
+  
   res.sendStatus(200);
 });
 
@@ -46,7 +60,9 @@ async function sendMessage(to, text) {
 
 async function handleMessage(message) {
   const from = message.from;
-  const text = message.text.body.toLowerCase();
+  const text = message.text?.body?.toLowerCase();
+
+  if (!text) return;
 
   switch (text) {
     case 'hola':
@@ -62,7 +78,3 @@ async function handleMessage(message) {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Bot corriendo en puerto ${PORT}`));
-
-app.get('/', (req, res) => {
-  res.send('Bot de Cumbres del Norte está corriendo 🏔️');
-});

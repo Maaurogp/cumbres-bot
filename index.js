@@ -78,3 +78,26 @@ async function handleMessage(message) {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Bot corriendo en puerto ${PORT}`));
+
+app.post('/webhook', (req, res) => {
+  console.log('📨 Mensaje recibido:', JSON.stringify(req.body, null, 2));
+  
+  const body = req.body;
+  
+  try {
+    if (body.object === 'whatsapp_business_account') {
+      const entry = body.entry?.[0];
+      const changes = entry?.changes?.[0];
+      const value = changes?.value;
+      const message = value?.messages?.[0];
+      
+      if (message) {
+        handleMessage(message);
+      }
+    }
+  } catch (error) {
+    console.error('Error procesando mensaje:', error);
+  }
+  
+  res.sendStatus(200);
+});

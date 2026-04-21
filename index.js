@@ -6,7 +6,8 @@ app.use(express.json());
 
 // Webhook verification
 app.get('/webhook', (req, res) => {
-  if (req.query['hub.verify_token'] === process.env.VERIFY_TOKEN) {
+  const verifyToken = req.query['hub.verify_token'];
+  if (verifyToken === process.env.VERIFY_TOKEN) {
     res.send(req.query['hub.challenge']);
   } else {
     res.sendStatus(403);
@@ -26,21 +27,37 @@ app.post('/webhook', (req, res) => {
 });
 
 async function sendMessage(to, text) {
-  await axios.post(
-    `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
-    {
-      messaging_product: 'whatsapp',
-      to,
-      text: { body: text }
-    },
-    { headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` } }
-  );
+  try {
+    await axios.post(
+      `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
+      {
+        messaging_product: 'whatsapp',
+        to,
+        text: { body: text }
+      },
+      {
+        headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` }
+      }
+    );
+  } catch (error) {
+    console.error('Error sending message:', error);
+  }
 }
 
 async function handleMessage(message) {
   const from = message.from;
   const text = message.text.body.toLowerCase();
-  await sendMessage(from, '¡Hola! Soy el asistente de Cumbres del Norte🏔️');
+
+  switch (text) {
+    case 'hola':
+      await sendMessage(from, '¡Hola! ¿Cómo estás? Soy el asistente de Cumbres del Norte 🏔️');
+      break;
+    case 'ayuda':
+      await sendMessage(from, '¡Claro! ¿Con qué necesitas ayuda hoy?');
+      break;
+    default:
+      await sendMessage(from, 'No entendí tu mensaje. Por favor, intenta de nuevo.');
+  }
 }
 
 const PORT = process.env.PORT || 3000;
